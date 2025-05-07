@@ -8,7 +8,7 @@ Key Features:
 - Ordered deployments and scale down 
 - One EBS volume per replica that is snapshoted and recreated on scale down or task failure
 - Optional environment variable injection per task (e.g. index-based)
-- An attached **Target Group** accessible via the `targetGroup` property
+- An managed **Target Group** accessible via the `targetGroup` property
 - Works by a simple Lambda control loop being executed by an Event Bridge Rule
 
 ---
