@@ -33,7 +33,6 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
   taskDefinition: zookeeperTaskDefinition,
   hostedZone: hostedZone,
   securityGroup: zookeeperSecurityGroup,
-  enableExecuteCommand: true,
   replicas: 3,
   environment: {
     ZOO_SERVERS: "server.0=zk-0.svc.internal:2888:3888;2181 server.1=zk-1.svc.internal:2888:3888;2181 server.2=zk-2.svc.internal:2888:3888;2181",
