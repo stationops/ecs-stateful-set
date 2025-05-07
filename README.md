@@ -112,6 +112,6 @@ loadBalancer.addListener('Listener', {
 
 ## Cleanup
 
-All volumes and services are tagged with the name of the StatefulSet and can be managed via `ess:<name>:managed` tags for cleanup or lifecycle automation.
+All volumes and services are tagged with the name of the StatefulSet and can be managed via `ess:<name>:managed`, `ess:<name>:index` tags for cleanup or lifecycle automation.
 
 ---
