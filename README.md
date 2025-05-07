@@ -13,7 +13,7 @@ Key Features:
 
 ---
 
-## 📦 Installation
+## Installation
 
 Add this construct to your CDK project:
 
