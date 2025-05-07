@@ -4,7 +4,7 @@ A reusable AWS CDK construct for deploying **stateful services** (like Zookeeper
 on **ECS Fargate** with persistent storage using EBS Volumes and Snapshots with internal service discovery.
 
 Key Features:
-- Stable DNS names across replicas
+- Stable DNS names for replicas 
 - Ordered deployments and scale down 
 - One EBS volume per replica that is snapshoted and recreated on scale down or task failure
 - Optional environment variable injection per task (e.g. index-based)
