@@ -50,7 +50,7 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
 
 A full example demonstrating how to deploy a stateful Apache Pinot cluster using this construct is provided in:
 
-[`src/demo/apachepinot.ts`](src/demo/apachepinot.ts)
+[`src/demo/apachepinot.ts`](/demo/apachepinot.ts)
 
 ### To run the example:
 
