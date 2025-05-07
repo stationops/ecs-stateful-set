@@ -20,5 +20,15 @@
   "peerDependencies": {
     "aws-cdk-lib": "2.173.2",
     "constructs": "^10.0.0"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-events": "^1.204.0",
+    "@aws-cdk/aws-events-targets": "^1.204.0",
+    "@aws-cdk/aws-lambda": "^1.204.0",
+    "@aws-sdk/client-dynamodb": "^3.799.0",
+    "@aws-sdk/client-ec2": "^3.800.0",
+    "@aws-sdk/client-ecs": "^3.799.0",
+    "@aws-sdk/client-elastic-load-balancing-v2": "^3.799.0",
+    "@aws-sdk/client-route-53": "^3.799.0"
   }
 }
