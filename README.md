@@ -61,6 +61,8 @@ cdk --app "npx ts-node src/demo/apachepinot.ts" deploy
 
 This will compile the project and deploy the stack defined in `apachepinot.ts` using the AWS CDK.
 
+The controller UI will be available at http://controller.svc.internal:9000
+
 ## Props
 
 ```ts
