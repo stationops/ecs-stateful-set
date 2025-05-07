@@ -47,6 +47,21 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
 
 ---
 
+## 🧪 Full Example with Apache Pinot
+
+A full example demonstrating how to deploy a stateful Apache Pinot cluster using this construct is provided in:
+
+[`src/demo/apachepinot.ts`](src/demo/apachepinot.ts)
+
+### 🚀 To run the example:
+
+```bash
+npx tsc
+cdk --app "npx ts-node src/demo/apachepinot.ts" deploy
+```
+
+This will compile the project and deploy the stack defined in `apachepinot.ts` using the AWS CDK.
+
 ## ⚙️ Props
 
 ```ts

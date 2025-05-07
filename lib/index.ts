@@ -1,4 +1,4 @@
-// run from demo dir with: npx tsc ; cdk --app "npx ts-node mysql.ts"  deploy
+// run from demo dir with: npx tsc ; cdk --app "npx ts-node apachepinot.ts"  deploy
 
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
