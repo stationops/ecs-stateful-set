@@ -6,7 +6,7 @@ on **ECS Fargate** with persistent storage using EBS Volumes and Snapshots with 
 Key Features:
 - Stable DNS names for replicas 
 - Ordered deployments and scale down 
-- One EBS volume per replica that is snapshoted and recreated on scale down or task failure
+- One EBS volume per replica that is snapshoted and recreated on scale down or task failure (Fargate doesn't support attaching existing volumes)
 - Optional environment variable injection per task (e.g. index-based)
 - An managed **Target Group** accessible via the `targetGroup` property
 - Works by a simple Lambda control loop being executed by an Event Bridge Rule
