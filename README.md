@@ -6,7 +6,7 @@ on **ECS Fargate** with persistent storage using EBS Volumes and Snapshots with 
 Key Features:
 - Stable DNS names across replicas
 - Ordered deployments and scale down 
-- One EBS volume per replica that is snapshoted and recreate on scale down or task failure
+- One EBS volume per replica that is snapshoted and recreated on scale down or task failure
 - Optional environment variable injection per task (e.g. index-based)
 - An attached **Target Group** accessible via the `targetGroup` property
 - Works by a simple Lambda control loop being executed by an Event Bridge Rule
@@ -23,7 +23,7 @@ import { StatefulSet } from './stateful-set';
 
 ---
 
-## 🛠️ Usage Example: Zookeeper Cluster
+## Usage Example: Zookeeper Cluster
 
 ```ts
 new StatefulSet(this, 'ZookeeperStatefulSet', {
@@ -47,13 +47,13 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
 
 ---
 
-## 🧪 Full Example with Apache Pinot
+## Full Example with Apache Pinot
 
 A full example demonstrating how to deploy a stateful Apache Pinot cluster using this construct is provided in:
 
 [`src/demo/apachepinot.ts`](src/demo/apachepinot.ts)
 
-### 🚀 To run the example:
+### To run the example:
 
 ```bash
 npx tsc
@@ -62,7 +62,7 @@ cdk --app "npx ts-node src/demo/apachepinot.ts" deploy
 
 This will compile the project and deploy the stack defined in `apachepinot.ts` using the AWS CDK.
 
-## ⚙️ Props
+## Props
 
 ```ts
 export interface StatefulSetProps {
@@ -82,7 +82,7 @@ export interface StatefulSetProps {
 
 ---
 
-## 📡 Service Discovery
+## Service Discovery
 
 The construct uses a Route 53 hosted zones to register each replica under a predictable DNS name:
 
@@ -93,7 +93,7 @@ e.g., zk-0.svc.internal
 
 ---
 
-## 🎯 Target Group
+## Target Group and Load Balancing
 
 The construct exposes a `targetGroup` property which can be used to route traffic to all replicas.
 
@@ -109,7 +109,7 @@ loadBalancer.addListener('Listener', {
 ---
 
 
-## 🧼 Cleanup
+## Cleanup
 
 All volumes and services are tagged with the name of the StatefulSet and can be managed via `ess:<name>:managed` tags for cleanup or lifecycle automation.
 
