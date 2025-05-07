@@ -1,7 +1,7 @@
 # StatefulSet CDK Construct
 
 A reusable AWS CDK construct for deploying **stateful services** (like Zookeeper, Apache Pinot, etc.) 
-on **ECS Fargate** with persistent storage using EBS Volumes and Snapshots with internal service discovery.
+on **ECS Fargate** with persistent storage using EBS Volume/Snapshots and service discovery.
 
 Key Features:
 - Stable DNS names for replicas 
