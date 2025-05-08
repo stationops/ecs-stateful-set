@@ -61,6 +61,8 @@ cdk --app "npx ts-node src/demo/apachepinot.ts" deploy
 
 This will compile the project and deploy the stack defined in `apachepinot.ts` using the AWS CDK.
 
+Each Pinot component corresponds to a Fargate task
+
 ### Pinot Dashboard Showing Servers
 
 ![Pinot Servers in Dashboard](demo/pinotservers.jpg)
