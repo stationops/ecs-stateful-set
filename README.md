@@ -1,15 +1,15 @@
 # StatefulSet CDK Construct
 
-A reusable AWS CDK construct for deploying **stateful services** (like Zookeeper, Apache Pinot, etc.) 
-on **ECS Fargate** with persistent storage using EBS Volumes and Snapshots with internal service discovery.
+A reusable AWS CDK construct for deploying **stateful services** (like Zookeeper, Apache Pinot, etc.)
+on **ECS Fargate** with persistent storage using EBS Volume/Snapshots and service discovery.
 
 Key Features:
-- Stable DNS names for replicas 
-- Ordered deployments and scale down 
-- One EBS volume per replica that is snapshoted and recreated on scale down or task failure
-- Optional environment variable injection per task (e.g. index-based)
-- An managed **Target Group** accessible via the `targetGroup` property
-- Works by a simple Lambda control loop being executed by an Event Bridge Rule
+- Stable DNS names for replicas
+- Ordered scale up and down
+- One EBS volume per replica that is snapshoted and recreated on scale down or task failure (Fargate doesn't support attaching existing volumes)
+- Optional environment variable injection per task (e.g. MY_ID: $index)
+- A managed **Target Group** accessible via the `targetGroup` property
+- Works using a simple Lambda control loop executed by an Event Bridge Rule
 
 ---
 
@@ -33,7 +33,6 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
   taskDefinition: zookeeperTaskDefinition,
   hostedZone: hostedZone,
   securityGroup: zookeeperSecurityGroup,
-  enableExecuteCommand: true,
   replicas: 3,
   environment: {
     ZOO_SERVERS: "server.0=zk-0.svc.internal:2888:3888;2181 server.1=zk-1.svc.internal:2888:3888;2181 server.2=zk-2.svc.internal:2888:3888;2181",
@@ -51,7 +50,7 @@ new StatefulSet(this, 'ZookeeperStatefulSet', {
 
 A full example demonstrating how to deploy a stateful Apache Pinot cluster using this construct is provided in:
 
-[`src/demo/apachepinot.ts`](src/demo/apachepinot.ts)
+[`src/demo/apachepinot.ts`](/demo/apachepinot.ts)
 
 ### To run the example:
 
@@ -61,6 +60,36 @@ cdk --app "npx ts-node src/demo/apachepinot.ts" deploy
 ```
 
 This will compile the project and deploy the stack defined in `apachepinot.ts` using the AWS CDK.
+
+### Pinot Dashboard Showing Servers
+
+![Pinot Servers in Dashboard](demo/pinotservers.jpg)
+
+### Pinot Server Tasks in Fargate
+
+
+![Pinot Server Tasks in Fargate](demo/pinotservertasks.jpg)
+
+The controller UI will be available at http://controller.svc.internal:9000
+
+## Accessing Services Locally
+
+You can access internal services (like the Pinot Controller UI) on your local machine by port forwarding.
+
+- **AWS SSM (with SSO)**:
+  ```bash
+  aws ssm start-session \
+    --target i-xxxxxxxxxxxxxxxxx \
+    --document-name AWS-StartPortForwardingSession \
+    --parameters '{"portNumber":["9000"],"localPortNumber":["9000"]}'
+  ```
+  
+- **SSH (with key pair)**:
+  ```bash
+  ssh -i mypem.pem -L 9000:controller.svc.internal:9000 ec2-user@<bastion-ip>
+  ```
+
+Once forwarded, open [http://localhost:9000](http://localhost:9000) in your browser.
 
 ## Props
 
@@ -111,6 +140,6 @@ loadBalancer.addListener('Listener', {
 
 ## Cleanup
 
-All volumes and services are tagged with the name of the StatefulSet and can be managed via `ess:<name>:managed` tags for cleanup or lifecycle automation.
+All volumes and services are tagged with the name of the StatefulSet and can be managed via `ess:<name>:managed`, `ess:<name>:index` tags for cleanup or lifecycle automation.
 
 ---
