@@ -83,7 +83,7 @@ You can access internal services (like the Pinot Controller UI) on your local ma
     --document-name AWS-StartPortForwardingSession \
     --parameters '{"portNumber":["9000"],"localPortNumber":["9000"]}'
   ```
-  
+
 - **SSH (with key pair)**:
   ```bash
   ssh -i mypem.pem -L 9000:controller.svc.internal:9000 ec2-user@<bastion-ip>
