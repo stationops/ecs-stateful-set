@@ -1,37 +1,28 @@
-import {
-    ECSClient,
-    ListTasksCommand,
-    DescribeTasksCommand,
-    RunTaskCommand,
-    StopTaskCommand, Task,
-} from '@aws-sdk/client-ecs';
-import {
-    DynamoDBClient,
-    PutItemCommand,
-    DeleteItemCommand,
-} from '@aws-sdk/client-dynamodb';
 
 import { acquireLock, releaseLock } from './lock';
 import {getActiveTasks, startTask, stopTask, waitForIp} from './task';
-import {handleNetwork, deleteDnsRecordForTask, createDnsRecordForTask} from './dns';
-import { deregisterTarget, registerTarget } from './target';
+import {deleteDnsRecordForTask, createDnsRecordForTask} from './dns';
+import {deregisterTarget, registerTarget, removeExtraTargets} from './target';
 import {
-    handleVolumes,
     getSnapshotIdForTaskIndex,
     getVolumeIdForTaskIndex,
-    handleStorage, hasVolumeForIndexWithoutSnapshot,
-    snapshotVolumeForIndex
+    hasVolumeForIndexWithoutSnapshot,
+    snapshotVolumeForIndex,
+    deleteDuplicateSnapshots,
+    describeVolumes,
+    describeVolumeSnapshots,
+    deleteVolume,
+    snapshotVolume
 } from './storage';
 import { hasInFlightSnapshotsOrTasks } from './action';
 
-const ecs = new ECSClient({});
-const ddb = new DynamoDBClient({});
 
 const CLUSTER_NAME = process.env.CLUSTER_NAME!;
 const TASK_DEFINITION_ARN = process.env.TASK_DEFINITION_ARN!;
 const DESIRED_REPLICAS = parseInt(process.env.DESIRED_REPLICAS!);
 const LOCK_TABLE_NAME = process.env.LOCK_TABLE_NAME!;
 const LOCK_ID = 'replica-controller-lock';
+
 
 const subnetIds = process.env.SUBNET_IDS!.split(',');
 const securityGroupId = process.env.SECURITY_GROUP_ID!;
@@ -105,10 +96,86 @@ async function runTask(tasks: any, runningCount : number, activeCount : number){
 
 }
 
+export async function handleNetwork({
+                                        tasks,
+                                        hostedZoneId,
+                                        dnsDomain,
+                                        targetGroupArn
+                                    }: {
+    tasks: any;
+    hostedZoneId: string;
+    dnsDomain: string;
+    targetGroupArn: string;
+}) {
+
+    for(let task of tasks){
+        await registerTarget(task.task, targetGroupArn)
+        await createDnsRecordForTask({task: task.task, hostedZoneId, index: task.index, dnsDomain})
+    }
+
+    await removeExtraTargets(tasks, targetGroupArn)
+}
+
+
+export async function handleVolumes(): Promise<void> {
+    console.log('Looking for orphaned volumes');
+
+    const volumesResp = await describeVolumes();
+
+    const orphanedVolumes = volumesResp.Volumes || [];
+
+    for (const volume of orphanedVolumes) {
+        const taskIndexTag = volume.Tags?.find(tag => tag.Key === `ess:${process.env.STATEFULSET_NAME}:index`);
+
+        if(!volume.CreateTime){
+            continue
+        }
+
+        const now = new Date();
+        const ageInMs = now.getTime() - volume.CreateTime.getTime();
+        const ageInMinutes = ageInMs / (1000 * 60);
+
+        if(ageInMinutes < 2){
+            // don't snapshot volumes that havent been attached yet
+            continue
+        }
+
+        if (taskIndexTag?.Value === undefined || volume.VolumeId === undefined) {
+            console.log(`No task index tag or volume found for: ${volume.VolumeId}, ${JSON.stringify(volume.Tags)}`)
+            continue;
+        }
+
+        const taskIndex = parseInt(taskIndexTag.Value);
+
+        const snapshotsResp = await describeVolumeSnapshots(volume.VolumeId)
+
+        const hasSnapshot = (snapshotsResp.Snapshots?.length ?? 0) > 0;
+
+        if (hasSnapshot) {
+            console.log(`Deleting orphaned volume, with existing snapshot, ${volume.VolumeId} for task index ${taskIndex}`);
+            console.log(`Creating snapshot for volume ${volume.VolumeId} in status ${volume.State}`)
+            await deleteVolume(volume.VolumeId)
+        } else {
+            console.log(`Creating snapshot for: ${volume.VolumeId}`);
+            await snapshotVolume(volume.VolumeId, taskIndex)
+
+        }
+    }
+}
+
+
+export async function handleStorage(){
+    await handleVolumes()
+    await deleteDuplicateSnapshots()
+}
+
 export const handler = async () => {
     console.log("*** Starting control loop ***")
     const shouldSkip = await hasInFlightSnapshotsOrTasks(CLUSTER_NAME);
-    if (shouldSkip) return;
+    if (shouldSkip) {
+        console.log('has inflight operations, skipping this run')
+        return
+    };
 
     const gotLock = await acquireLock(LOCK_TABLE_NAME, LOCK_ID);
     if (!gotLock) return;

@@ -8,29 +8,6 @@ import {extractPrivateIp} from "./task";
 
 const r53 = new Route53Client({});
 
-export async function handleNetwork({
-                                                 tasks,
-                                                 hostedZoneId,
-                                                 dnsDomain,
-                                                 targetGroupArn
-                                             }: {
-    tasks: any;
-    hostedZoneId: string;
-    dnsDomain: string;
-    targetGroupArn: string;
-}) {
-
-    for(let task of tasks){
-        await registerTarget(task.task, targetGroupArn)
-        await createDnsRecordForTask({task: task.task, hostedZoneId, index: task.index, dnsDomain})
-
-
-    }
-
-    await removeExtraTargets(tasks, targetGroupArn)
-
-    // await removeExtraTargets(tasks, targetGroupArn)
-}
 
 
 

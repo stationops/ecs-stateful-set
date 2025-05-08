@@ -5,7 +5,9 @@ import {
     CreateSnapshotCommand,
     DeleteVolumeCommand,
     DeleteSnapshotCommand,
-    Volume
+    Volume, DeleteVolumeCommandOutput,
+    DescribeSnapshotsCommandOutput,
+    DescribeVolumesCommandOutput
 } from '@aws-sdk/client-ec2';
 import {Task} from "@aws-sdk/client-ecs";
 
@@ -225,6 +227,10 @@ export async function deleteDuplicateSnapshots(): Promise<void> {
     }
 }
 
+export async function deleteVolume(volumeId: string): Promise<DeleteVolumeCommandOutput> {
+    return await ec2.send(new DeleteVolumeCommand({ VolumeId: volumeId }));
+}
+
 export async function findVolume(volumeId: string): Promise<Volume | undefined> {
     try {
         const volumesResp = await ec2.send(new DescribeVolumesCommand({
@@ -246,68 +252,28 @@ export async function findVolume(volumeId: string): Promise<Volume | undefined> 
         throw err;
     }
 }
-export async function handleVolumes(): Promise<void> {
-    console.log('Looking for orphaned volumes');
 
-    const volumesResp = await ec2.send(new DescribeVolumesCommand({
+export async function describeVolumeSnapshots(volumeId: string) : Promise<DescribeSnapshotsCommandOutput> {
+    return  await ec2.send(new DescribeSnapshotsCommand({
+        Filters: [
+            { Name: 'status', Values: ['completed', 'pending'] },
+            { Name: `tag:ess:${process.env.STATEFULSET_NAME}:managed`, Values: ['true'] },
+            { Name: `tag:ess:${process.env.STATEFULSET_NAME}:volume-id`, Values: [volumeId] }
+        ],
+        OwnerIds: ['self']
+    }));
+}
+
+
+export async function describeVolumes() : Promise<DescribeVolumesCommandOutput> {
+    return  await ec2.send(new DescribeVolumesCommand({
         Filters: [
             { Name: 'status', Values: ['available'] },
             { Name: `tag:ess:${process.env.STATEFULSET_NAME}:managed`, Values: ['true'] }
         ],
     }));
-
-    const orphanedVolumes = volumesResp.Volumes || [];
-
-    for (const volume of orphanedVolumes) {
-        const taskIndexTag = volume.Tags?.find(tag => tag.Key === `ess:${process.env.STATEFULSET_NAME}:index`);
-
-        if(!volume.CreateTime){
-            continue
-        }
-
-        const now = new Date();
-        const ageInMs = now.getTime() - volume.CreateTime.getTime();
-        const ageInMinutes = ageInMs / (1000 * 60);
-
-        if(ageInMinutes < 2){
-            // don't snapshot volumes that havent been attached yet
-            continue
-        }
-
-
-        if (taskIndexTag?.Value === undefined || volume.VolumeId === undefined) {
-            console.log(`No task index tag or volume found for: ${volume.VolumeId}, ${JSON.stringify(volume.Tags)}`)
-            continue;
-        }
-
-        const taskIndex = parseInt(taskIndexTag.Value);
-
-
-        const snapshotsResp = await ec2.send(new DescribeSnapshotsCommand({
-            Filters: [
-                { Name: 'status', Values: ['completed', 'pending'] },
-                { Name: `tag:ess:${process.env.STATEFULSET_NAME}:managed`, Values: ['true'] },
-                { Name: `tag:ess:${process.env.STATEFULSET_NAME}:volume-id`, Values: [volume.VolumeId] }
-            ],
-            OwnerIds: ['self']
-        }));
-
-        const hasSnapshot = (snapshotsResp.Snapshots?.length ?? 0) > 0;
-
-        if (hasSnapshot) {
-            console.log(`Deleting orphaned volume, with existing snapshot, ${volume.VolumeId} for task index ${taskIndex}`);
-            console.log(`Creating snapshot for volume ${volume.VolumeId} in status ${volume.State}`)
-            await ec2.send(new DeleteVolumeCommand({ VolumeId: volume.VolumeId }));
-        } else {
-            console.log(`Creating snapshot for: ${volume.VolumeId}`);
-            await snapshotVolume(volume.VolumeId, taskIndex)
-
-        }
-    }
 }
 
 
-export async function handleStorage(){
-    await handleVolumes()
-    await deleteDuplicateSnapshots()
-}
+
+
