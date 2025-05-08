@@ -5,13 +5,13 @@ on:
     paths:
       - 'test/**'
       - 'package.json'
-      - 'jest.config.*'
+      - '../../jest.config.ts'
       - '.github/workflows/jest-tests.yml'
   pull_request:
     paths:
       - 'test/**'
       - 'package.json'
-      - 'jest.config.*'
+      - '../../jest.config.ts'
       - '.github/workflows/jest-tests.yml'
 
 jobs:

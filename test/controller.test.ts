@@ -16,8 +16,6 @@ jest.mock('../lib/lambda/action', () => ({
 import { hasInFlightSnapshotsOrTasks } from '../lib/lambda/action';
 
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/index.ts
 test('Controller loops exists if inflight tasks', async () => {
     (hasInFlightSnapshotsOrTasks as jest.Mock).mockImplementation(() => true);
 
