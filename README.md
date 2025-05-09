@@ -1,3 +1,5 @@
+⚠️ **Notice:** This Construct is under development, we haven't used it for any critical workloads
+
 # StatefulSet CDK Construct
 
 A reusable AWS CDK construct for deploying **stateful services** (like Zookeeper, Apache Pinot, etc.)
